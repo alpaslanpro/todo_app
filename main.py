@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.db.database import Base, engine
+from app.models.todo import Todo
+
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(
     title="Todo App API",
     version="1.0.0",
