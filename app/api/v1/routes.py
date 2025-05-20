@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
-from app.schemas.todo import TodoCreate, TodoListResponse, TodoResponse
+from app.schemas.todo import TodoCreate, TodoListResponse, TodoResponse, TodoUpdate
 from app.services import todo_service
 
-router = APIRouter(prefix="/api/v1", tags=["Todos"])
+
+router = APIRouter(tags=["Todos"])
 
 
 def get_db():
@@ -34,3 +35,35 @@ def list_todos(
     if not todos:
         raise HTTPException(status_code=204, detail="No Content")
     return {"total": total, "limit": limit, "offset": offset, "data": todos}
+
+
+@router.get("/todos/{todo_id}", response_model=TodoResponse)
+def get_todo(todo_id: int, db: Session = Depends(get_db)):
+    todo = todo_service.get_todo(db, todo_id)
+    if not todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return todo
+
+
+@router.put("/todos/{todo_id}", response_model=TodoResponse)
+def update_todo(todo_id: int, update_data: TodoUpdate, db: Session = Depends(get_db)):
+    updated = todo_service.update_todo(db, todo_id, update_data)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return updated
+
+
+@router.patch("/todos/{todo_id}", response_model=TodoResponse)
+def patch_todo(todo_id: int, update_data: TodoUpdate, db: Session = Depends(get_db)):
+    updated = todo_service.update_todo(db, todo_id, update_data)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return updated
+
+
+@router.delete("/todos/{todo_id}", status_code=204)
+def delete_todo(todo_id: int, db: Session = Depends(get_db)):
+    success = todo_service.delete_todo(db, todo_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return None
